@@ -55,6 +55,7 @@ extern crate rustc_session;
 extern crate rustc_span;
 extern crate rustc_target;
 extern crate rustc_trait_selection;
+extern crate smallvec;
 extern crate thin_vec;
 
 #[macro_use]
@@ -65,7 +66,6 @@ extern crate clippy_utils;
 
 mod utils;
 
-pub mod ctfe; // Very important lint, do not remove (rust#125116)
 pub mod declared_lints;
 pub mod deprecated_lints;
 
@@ -95,6 +95,7 @@ mod casts;
 mod cfg_not_test;
 mod checked_conversions;
 mod cloned_ref_to_slice_refs;
+mod coerce_container_to_any;
 mod cognitive_complexity;
 mod collapsible_if;
 mod collection_is_never_read;
@@ -584,8 +585,6 @@ pub fn register_lints(store: &mut rustc_lint::LintStore, conf: &'static Conf) {
     let attrs = attr_storage.clone();
     store.register_early_pass(move || Box::new(AttrCollector::new(attrs.clone())));
 
-    store.register_late_pass(|_| Box::new(ctfe::ClippyCtfe));
-
     store.register_late_pass(move |_| Box::new(operators::arithmetic_side_effects::ArithmeticSideEffects::new(conf)));
     store.register_late_pass(|_| Box::new(utils::dump_hir::DumpHir));
     store.register_late_pass(|_| Box::new(utils::author::Author));
@@ -948,5 +947,6 @@ pub fn register_lints(store: &mut rustc_lint::LintStore, conf: &'static Conf) {
     store.register_late_pass(move |_| Box::new(redundant_test_prefix::RedundantTestPrefix));
     store.register_late_pass(|_| Box::new(cloned_ref_to_slice_refs::ClonedRefToSliceRefs::new(conf)));
     store.register_late_pass(|_| Box::new(infallible_try_from::InfallibleTryFrom));
+    store.register_late_pass(|_| Box::new(coerce_container_to_any::CoerceContainerToAny));
     // add lints here, do not remove this comment, it's used in `new_lint`
 }
